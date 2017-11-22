@@ -57,6 +57,12 @@ import cowrie.core.checkers
 
 import cowrie.telnet.transport
 import cowrie.ssh.factory
+import cowrie.coap.factory
+
+from cowrie.coap.server import CounterResource, BlockResource, CoreResource, SeparateLargeResource, TimeResource
+
+import cowrie.coap.txthings.resource as resource
+import cowrie.coap.txthings.coap as coap
 
 class Options(usage.Options):
     """
@@ -139,8 +145,16 @@ Makes a Cowrie SSH/Telnet honeypot.
         else:
             enableTelnet = False
 
-        if enableTelnet == False and enableSSH == False:
-            print('ERROR: You must at least enable SSH or Telnet')
+        # coap is enabled by default
+        if cfg.has_option('coap', 'enabled') == False or \
+           (cfg.has_option('coap', 'enabled') and \
+               cfg.getboolean('coap', 'enabled') == True):
+            enableCoAP = True
+        else:
+            enableCoAP = False
+
+        if enableTelnet == False and enableSSH == False and enableCoAP == False:
+            print('ERROR: You must at least enable SSH or Telnet or CoAP')
             sys.exit(1)
 
         # Load db loggers
@@ -211,6 +225,47 @@ Makes a Cowrie SSH/Telnet honeypot.
 
             listen_endpoints = get_endpoints_from_section(cfg, 'telnet', 2223)
             create_endpoint_services(reactor, topService, listen_endpoints, f)
+
+        if enableCoAP:
+            # fact = cowrie.coap.factory.CowrieCoAPFactory(cfg)
+            # factory.tac = self
+            # fact.portal = portal.Portal(core.realm.HoneyPotRealm(cfg))
+            # fact.portal.registerChecker(core.checkers.HoneypotPasswordChecker(cfg))
+
+            listen_endpoints = get_endpoints_from_section(cfg, 'coap', 5683)
+            # print (listen_endpoints[0].split(':')[1])
+            # create_endpoint_services(reactor, topService, listen_endpoints, fact)
+
+            root = resource.CoAPResource()
+
+            well_known = resource.CoAPResource()
+            root.putChild('.well-known', well_known)
+            coreCoAP = CoreResource(root)
+            well_known.putChild('core', coreCoAP)
+
+            counter = CounterResource(5000)
+            root.putChild('counter', counter)
+
+            time = TimeResource()
+            root.putChild('time', time)
+
+            other = resource.CoAPResource()
+            root.putChild('other', other)
+
+            block = BlockResource()
+            other.putChild('block', block)
+
+            separate = SeparateLargeResource()
+            other.putChild('separate', separate)
+
+            endpoint = resource.Endpoint(root)
+            reactor.listenUDP(int(listen_endpoints[0].split(':')[1]), coap.Coap(endpoint)) #, interface="::")
+
+            # internet.StreamServerEndpointService(endpoint, factory).setServiceParent(topService)
+            
+            # endpoint = resource.Endpoint(root)
+
+            # service_object = reactor.listenUDP(int(port), coap.Coap(endpoint))
 
         return topService
 

@@ -539,3 +539,36 @@ logfile = log/cowrie.json
 # off. Do not do this for real AWS. It's only needed for self-hosted S3 clone
 # where you don't yet have real certificates.
 #verify = no
+
+
+# ============================================================================
+# CoAP Specific Options
+# ============================================================================
+[coap]
+
+# Enable CoAP support
+# (default: true)
+enabled = true
+
+
+# (default: "SSH-2.0-SSH-2.0-OpenSSH_6.0p1 Debian-4+deb7u2")
+version = CoAP
+
+
+# IP addresses to listen for incoming SSH connections.
+# (DEPRECATED: use listen_endpoints instead)
+#
+# (default: 0.0.0.0) = any IPv4 address
+#listen_addr = 0.0.0.0
+# (use :: for listen to all IPv6 and IPv4 addresses)
+#listen_addr = ::
+
+
+# Port to listen for incoming SSH connections.
+# (DEPRECATED: use listen_endpoints instead)
+#
+# (default: 5683)
+#listen_port = 5683
+
+
+listen_endpoints = udp:5683:interface=0.0.0.0
