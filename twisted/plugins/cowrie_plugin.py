@@ -260,6 +260,9 @@ Makes a Cowrie SSH/Telnet honeypot.
 
             endpoint = resource.Endpoint(root)
             reactor.listenUDP(int(listen_endpoints[0].split(':')[1]), coap.Coap(endpoint)) #, interface="::")
+            
+            log.msg(eventid='cowrie.coap.connected',
+                protocol='CoAP')
 
             # internet.StreamServerEndpointService(endpoint, factory).setServiceParent(topService)
             
